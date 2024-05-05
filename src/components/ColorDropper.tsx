@@ -1,19 +1,35 @@
 import { FC } from 'react';
+import { getMiddleElemIndex } from '../utils/getMiddleElemIndex';
+import { rgbaToHex } from '../utils/rgbaToHex';
 
 interface ColorDropperProps {
   colorDropperRef: React.MutableRefObject<HTMLDivElement | null>;
-  pathRef: React.MutableRefObject<SVGPathElement | null>;
-  dropperCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
+  imageData: Uint8ClampedArray | undefined;
+  showColorDropper: boolean;
 }
 
 export const ColorDropper: FC<ColorDropperProps> = ({
   colorDropperRef,
-  pathRef,
-  dropperCanvasRef,
+  imageData,
+  showColorDropper,
 }) => {
+  const data = [];
+  if (imageData) {
+    for (let i = 0; i <= imageData.length; i += 4) {
+      data.push(
+        rgbaToHex(
+          imageData[i],
+          imageData[i + 1],
+          imageData[i + 2],
+          imageData[i + 3]
+        )
+      );
+    }
+  }
+
   return (
     <div
-      className='
+      className={`
       flex 
       items-center
       justify-center
@@ -24,36 +40,56 @@ export const ColorDropper: FC<ColorDropperProps> = ({
       h=[150px]
       rounded-[50%]
       overflow-hidden
-      '
+      ${
+        showColorDropper
+          ? 'opacity-100 pointer-events-auto'
+          : 'opacity-0 pointer-events-none'
+      }
+      `}
       ref={colorDropperRef}
     >
-      <div className='relative'>
-        <canvas
-          ref={dropperCanvasRef}
-          width={150}
-          height={150}
-          className='
-          bg-black/50
-          absolute
-          -z-10
-          '
-        ></canvas>
-        <svg
-          width='150'
-          height='150'
-          viewBox='0 0 160 160'
-          fill='none'
-          xmlns='http://www.w3.org/2000/svg'
-        >
-          <path
-            ref={pathRef}
-            fillRule='evenodd'
-            clipRule='evenodd'
-            d='M80 148C117.555 148 148 117.555 148 80C148 42.4446 117.555 12 80 12C42.4446 12 12 42.4446 12 80C12 117.555 42.4446 148 80 148ZM80 160C124.183 160 160 124.183 160 80C160 35.8172 124.183 0 80 0C35.8172 0 0 35.8172 0 80C0 124.183 35.8172 160 80 160Z'
-            fill='#D9D9D9'
+      <div className='absolute -z-10 ownGrid gap-[1px] bg-neutral-400 w-[154px] h-[154px]'>
+        {data.map((color, idx) => (
+          <div
+            key={idx + color}
+            style={{ backgroundColor: color }}
+            className={`${
+              idx === getMiddleElemIndex(11, 11)
+                ? 'shadow-[0_0_2px_1px_white]'
+                : 'shadow-none'
+            }`}
           />
-        </svg>
+        ))}
+        <div
+          className='
+          absolute 
+          bottom-[20%]
+          left-[50%] 
+          -translate-x-[50%] 
+          rounded-full 
+          bg-white 
+          px-2 
+          border'
+        >
+          <span className='text-xs font-semibold'>
+            {data[getMiddleElemIndex(11, 11)]}
+          </span>
+        </div>
       </div>
+      <svg
+        width='150'
+        height='150'
+        viewBox='0 0 160 160'
+        fill='none'
+        xmlns='http://www.w3.org/2000/svg'
+      >
+        <path
+          fillRule='evenodd'
+          clipRule='evenodd'
+          d='M80 148C117.555 148 148 117.555 148 80C148 42.4446 117.555 12 80 12C42.4446 12 12 42.4446 12 80C12 117.555 42.4446 148 80 148ZM80 160C124.183 160 160 124.183 160 80C160 35.8172 124.183 0 80 0C35.8172 0 0 35.8172 0 80C0 124.183 35.8172 160 80 160Z'
+          fill={data[getMiddleElemIndex(11, 11)]}
+        />
+      </svg>
     </div>
   );
 };

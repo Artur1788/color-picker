@@ -6,54 +6,50 @@ import { ColorDropper } from './components/ColorDropper';
 import { getColor } from './utils/getColor';
 import { isPointerInsideCanvas } from './utils/isPointerInsideCanvas';
 
-import testImage from './assets/images/1920x1080-4598441-beach-water-pier-tropical-sky-sea-clouds-island-palm-trees.jpg';
-
 const App = () => {
   const [hexCode, setHexCode] = useState<string>('');
   const [isDropperActive, setIsDropperActive] = useState<boolean>(false);
   const [showColorDropper, setShowColorDropper] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const colorDropperRef = useRef<HTMLDivElement | null>(null);
-  const pathRef = useRef<SVGPathElement | null>(null);
-  const dropperCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [imageData, setImageData] = useState<Uint8ClampedArray | undefined>(
+    undefined
+  );
 
   const toggleDropper = () => setIsDropperActive((prevValue) => !prevValue);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const dropper = dropperCanvasRef.current;
     let color: string | undefined;
 
-    function mouseClickHandler() {
-      if (color) setHexCode(color);
+    function mouseClickHandler(e: MouseEvent) {
+      const checkPointerPosition = isPointerInsideCanvas(canvas, e);
+      if (checkPointerPosition && color) setHexCode(color);
     }
 
     const mouseMoveHandler = (e: MouseEvent) => {
-      if (dropper) {
-        const ctx = dropper.getContext('2d');
-        const image = new Image();
-        image.onload = () => {
-          const width = canvas!.width;
-          const height = canvas!.height;
-          ctx?.drawImage(image, 0, 300, 200, 200, 0, 0, width, height);
-        };
-        image.src = testImage;
-      }
+      const ctx = canvas?.getContext('2d');
       const colorDropper = colorDropperRef.current;
+      const { left, top } = canvas!.getBoundingClientRect();
+      const x = e.clientX - left;
+      const y = e.clientY - top;
       const checkPointerPosition = isPointerInsideCanvas(canvas, e);
       color = getColor(canvas, e);
+
+      setImageData(ctx?.getImageData(x - 5, y - 5, 11, 11).data);
 
       if (colorDropper) {
         colorDropper.style.left = `${e.clientX}px`;
         colorDropper.style.top = `${e.clientY}px`;
-        pathRef.current!.setAttribute('fill', color!);
-        // colorDropper!.style.cursor = 'none';
+        colorDropper!.style.cursor = 'none';
       }
 
       if (checkPointerPosition) {
         setShowColorDropper(true);
       } else {
-        setShowColorDropper(false);
+        if (colorDropper) {
+          setShowColorDropper(false);
+        }
       }
     };
 
@@ -70,34 +66,39 @@ const App = () => {
 
   return (
     <>
-      <div className='flex mx-auto max-w-fit flex-col gap-y-4 p-6'>
+      <div className='flex mx-auto max-w-fit flex-col gap-y-4 pt-6'>
         <div className='flex items-center justify-center'>
-          <div
-            className='flex flex-[1_1_50%] cursor-pointer gap-x-3'
-            onClick={toggleDropper}
-          >
-            <img
-              src={colorPicker}
-              alt='color picker'
-              className='fill-red-500 stroke-orange-300'
-            />
-            {isDropperActive && <span>Dropper is active</span>}
+          <div className='flex flex-[1_1_50%] gap-x-3 items-center'>
+            <div
+              className='p-3 bg-slate-400 rounded-full cursor-pointer'
+              onClick={toggleDropper}
+            >
+              <img
+                width={20}
+                height={20}
+                src={colorPicker}
+                alt='color picker'
+              />
+            </div>
+            {isDropperActive && (
+              <span className='font-semibold text-lg'>
+                Color dropper is active
+              </span>
+            )}
           </div>
           <div className='flex-[1_1_50%]'>
-            <p>{hexCode}</p>
+            <p className='text-lg font-bold'>{hexCode}</p>
           </div>
         </div>
         <div className='flex items-center justify-center'>
           <Canvas canvasRef={canvasRef} />
         </div>
       </div>
-      {showColorDropper && (
-        <ColorDropper
-          colorDropperRef={colorDropperRef}
-          dropperCanvasRef={dropperCanvasRef}
-          pathRef={pathRef}
-        />
-      )}
+      <ColorDropper
+        colorDropperRef={colorDropperRef}
+        imageData={imageData}
+        showColorDropper={showColorDropper}
+      />
     </>
   );
 };
