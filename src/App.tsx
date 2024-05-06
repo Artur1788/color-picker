@@ -31,7 +31,7 @@ const App = () => {
 
     //Handle mouse move event
     const mouseMoveHandler = (e: MouseEvent) => {
-      const ctx = canvas?.getContext('2d');
+      const ctx = canvas?.getContext('2d', { willReadFrequently: true });
       const colorDropper = colorDropperRef.current;
       const { left, top } = canvas!.getBoundingClientRect();
       const x = e.clientX - left;
