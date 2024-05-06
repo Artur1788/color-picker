@@ -5,10 +5,3 @@
 body {
     @apply bg-neutral-700
 }
-
-@layer utilities {
-    .ownGrid {
-        display: grid;
-        grid-template-columns: repeat(11, minmax(10.5px,1fr));
-    }
-}

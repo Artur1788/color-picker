@@ -16,34 +16,43 @@ const App = () => {
     undefined
   );
 
+  //Toggle color dropper functional
   const toggleDropper = () => setIsDropperActive((prevValue) => !prevValue);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     let color: string | undefined;
 
+    //Select and show color hex code
     function mouseClickHandler(e: MouseEvent) {
       const checkPointerPosition = isPointerInsideCanvas(canvas, e);
       if (checkPointerPosition && color) setHexCode(color);
     }
 
+    //Handle mouse move event
     const mouseMoveHandler = (e: MouseEvent) => {
       const ctx = canvas?.getContext('2d');
       const colorDropper = colorDropperRef.current;
       const { left, top } = canvas!.getBoundingClientRect();
       const x = e.clientX - left;
       const y = e.clientY - top;
+      //Check if mouse pointer inside canvas or not
       const checkPointerPosition = isPointerInsideCanvas(canvas, e);
+      //Get a specific mouse position and
+      //return the color's hex code of a specific pixel
       color = getColor(canvas, e);
 
+      //Get and save cropped image data
       setImageData(ctx?.getImageData(x - 5, y - 5, 11, 11).data);
 
+      //If Color dropper exists, set position and hide mouse cursor
       if (colorDropper) {
         colorDropper.style.left = `${e.clientX}px`;
         colorDropper.style.top = `${e.clientY}px`;
         colorDropper!.style.cursor = 'none';
       }
 
+      //Check if mouse pointer is inside canvas then show color dropper
       if (checkPointerPosition) {
         setShowColorDropper(true);
       } else {
@@ -53,12 +62,16 @@ const App = () => {
       }
     };
 
+    //If user activate color dropper then add listeners
+    //on mousemove and mouse click
     if (isDropperActive) {
       document.addEventListener('mousemove', mouseMoveHandler);
       document.addEventListener('click', mouseClickHandler);
     }
 
     return () => {
+      //Remove event listeners on component's unmount
+      //and when dependency array has changed
       document.removeEventListener('mousemove', mouseMoveHandler);
       document.removeEventListener('click', mouseClickHandler);
     };
